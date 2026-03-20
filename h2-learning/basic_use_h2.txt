@@ -1,0 +1,160 @@
+1. Start H2
+
+  java -jar h2-*.jar
+
+By default, this starts an H2 TCP server and opens the web console at http://localhost:8082.
+Default credentials in the browser console are usually:
+
+  User Name: sa
+  Password: (leave blank)
+
+2. Create a new database via terminal
+
+- Open H2 Shell in terminal, This starts an interactive SQL shell.
+
+  java -cp h2-*.jar org.h2.tools.Shell
+
+3. You will be prompted for: 
+  
+  URL: jdbc:h2:~/test   ---> Creates/uses a database called 'test' in your Home ditrectory (~)
+  User: sa              ---> Username
+  Password:             ---> (Blank) default
+
+4. Run SQL commands in terminal: Once connected, you can create tables and insert data:
+  Ctrl+D or type exit; to leave the shell.
+
+  CREATE TABLE students (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(50),
+      age INT
+  );
+
+  INSERT INTO students(name, age) VALUES('Alice', 22);
+  INSERT INTO students(name, age) VALUES('Bob', 25);
+
+  SELECT * FROM students;
+
+5. Connecting from Java
+
+  import java.sql.*;
+
+  public class H2Example {
+      public static void main(String[] args) throws Exception {
+          Connection conn = DriverManager.getConnection(
+              "jdbc:h2:~/learning_db", "sa", ""
+          );
+          Statement stmt = conn.createStatement();
+          stmt.execute("CREATE TABLE IF NOT EXISTS test(id INT PRIMARY KEY, name VARCHAR(100));");
+          stmt.execute("INSERT INTO test VALUES(1, 'Ashoka');");
+          ResultSet rs = stmt.executeQuery("SELECT * FROM test;");
+          while(rs.next()){
+              System.out.println(rs.getInt(1) + " " + rs.getString(2));
+          }
+          conn.close();
+      }
+  }
+
+6 Use H2 Console for quick queries
+
+  Open the browser at http://localhost:8082
+  Connect with the same JDBC URL (jdbc:h2:~/learning_db) and credentials.
+  You can run queries visually, which is great for learning.
+
+ 
+=======================================================================================
+
+
+If you started H2 server mode and also opened a shell with the file path (jdbc:h2:~/<database-name>).
+The shell opened the database in embedded mode → exclusive file lock.
+When you try to connect with browser to the same database (jdbc:h2:~/<database-name>), it gets “database already in use”.
+Key point: You cannot mix embedded mode and server mode on the same database file.
+
+Solution:  Always use the TCP URL when connecting through the server:
+
+1. Launch H2 server (tcp + web) → Terminal 1
+
+2. Open H2 shell with TCP URL → Terminal 2
+
+3. Open browser console with TCP URL
+
+4. Connect Java program with same TCP URL
+
+------------------------------------------------------------------------------------
+  --> By default connect in Embedded mode, i.e, it opens database file in exclusive mode. 
+      This blocks other connections including browser console. 
+  --> Insttead use SERVER mode to allow all clinet to connect via TCP URL.
+
+------------------------------------------------
+
+## 1. Start H2 Server (TCP + Web Console)
+
+Open a terminal and run:
+
+```bash
+java -cp ~/path/to/h2-*.jar org.h2.tools.Server -tcp -tcpAllowOthers -web -webAllowOthers
+
+```
+
+-tcp → allows TCP connections
+-tcpAllowOthers → optional, allows other machines to connect
+-web → launches browser console
+-webAllowOthers → optional, allows remote browser access
+
+Server output should show:
+
+  TCP server running at tcp://localhost:9092
+  Web console running at http://localhost:8082
+
+
+2. Open H2 Shell via TCP
+   Open another terminal and run:
+
+   java -cp ~/path/to/h2-*.jar org.h2.tools.Shell
+
+Enter the following at prompts:
+
+  URL: jdbc:h2:tcp://localhost/~/<database-name>
+  Driver: org.h2.Driver
+  User: sa
+  Password:
+
+Now you can run SQL commands in the terminal:
+
+
+3. Open Browser Console via TCP
+
+  Go to http://localhost:8082
+  Connect using:
+  
+  JDBC URL: jdbc:h2:tcp://localhost/~/h2-db-learning
+  User: sa
+  Password: 
+
+Browser can now run queries simultaneously with the terminal shell.
+
+4. Connect Java Program via TCP
+   Example Java connection:
+ 
+import java.sql.*;
+
+public class H2Example {
+    public static void main(String[] args) throws Exception {
+        Connection conn = DriverManager.getConnection(
+            "jdbc:h2:tcp://localhost/~/h2-db-learning", "sa", ""
+        );
+        Statement stmt = conn.createStatement();
+        stmt.execute("CREATE TABLE IF NOT EXISTS test(id INT PRIMARY KEY, name VARCHAR(100));");
+        stmt.execute("INSERT INTO test VALUES(1, 'Ashoka');");
+        ResultSet rs = stmt.executeQuery("SELECT * FROM test;");
+        while(rs.next()){
+            System.out.println(rs.getInt(1) + " " + rs.getString(2));
+        }
+        conn.close();
+    }
+}
+
+- Use the same TCP URL (jdbc:h2:tcp://localhost/~/h2-db-learning)
+
+- Multiple clients (browser + terminal + Java) can connect simultaneously.
+
+===============================================================================
