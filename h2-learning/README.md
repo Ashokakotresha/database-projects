@@ -134,62 +134,52 @@ http://localhost:8080/h2-console
 
 1. Download the latest H2 Database files
    Either download JAR file and run it.
-   
+    ```
     $ wget https://github.com/h2database/h2database/releases/download/version-2.4.240/h2-2.4.240.jar
-
     $ java -jar h2-2.4.240.jar
-
+    ```
   OR 
 
    Download full build, unzip and run the JAR file.
-   
+    ```
     $ wget https://github.com/h2database/h2database/releases/download/version-2.4.240/h2-2.4.240.zip
-    
     $ unzip h2-2.4.240.zip
-    
     $ cd h2/bin
-
-2. Run the JAR application to start the Databse. 
-
+    ```
+    
+2. Run the JAR application to start the Databse.
+   ```
    $ java -jar h2*.jar
+   ```
    
    Connection settings:
-
+```
    JDBC URL: jdbc:h2:mem:testdb
-
    User: sa
-
    Password: (leave empty)
-
+```
 4. Connect to the running Database:
 
    $ http://localhost:8082
    
-6. Try these SQL commands
+5. Try these SQL commands
+   ```
+   CREATE TABLE users (
+      id INT PRIMARY KEY,
+      name VARCHAR(100),
+      age INT
+   );
 
-CREATE TABLE users (
-    id INT PRIMARY KEY,
-    name VARCHAR(100),
-    age INT
-);
+   INSERT INTO users VALUES (1, 'Ashoka', 25);
+   INSERT INTO users VALUES (2, 'John', 30);
+   SELECT * FROM users;
+   UPDATE users SET age = 26 WHERE id = 1;
+   DELETE FROM users WHERE id = 2;
+   ```
 
-INSERT INTO users VALUES (1, 'Ashoka', 25);
-INSERT INTO users VALUES (2, 'John', 30);
-
-SELECT * FROM users;
-
-UPDATE users SET age = 26 WHERE id = 1;
-
-DELETE FROM users WHERE id = 2;
-
-----------------------
-
-5. This gives you:
-
-SQL basics
-
-CRUD operations
-
-Instant feedback
+6. This gives you:
+- SQL basics
+- CRUD operations
+- Instant feedback
 
 =====================================
