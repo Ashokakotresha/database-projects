@@ -1,3 +1,4 @@
+
 # Database Learning Projects
 
 This repository contains hands-on projects to learn different databases.
@@ -174,4 +175,11 @@ This roadmap prepares you for:
 * System design interviews
 * Real-world distributed systems
 
+------------------------------------------------------------
+
+## License
+
+This project is licensed under the MIT License.
+
+Copyright (c) 2026 Ashoka Kotresha
 
