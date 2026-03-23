@@ -16,15 +16,14 @@ The purpose is not only to learn syntax or framework usage, but to learn how a s
 - how to move from a simple local system to a more production-like system
 - how to document decisions clearly
 
-This project is intentionally designed so that it can be shown to:
+This includes:
+- understanding how to model real-world data
+- organizing code in a clean structure
+- designing APIs
+- making engineering decisions gradually
+- improving the system over time
 
-- recruiters
-- interviewers
-- hiring managers
-- mentors
-- other engineers
-
-It is both a **learning project** and a **portfolio project**.
+The focus is on clarity, correctness, and structured progression.
 
 ---
 
@@ -103,7 +102,6 @@ This project introduces concepts such as:
 - database migration
 - scaling notes
 
-### Recruiter value
 This is stronger than a random CRUD app because it includes:
 - data modeling
 - design documentation
@@ -242,18 +240,17 @@ This project is designed to teach both implementation and engineering reasoning.
 
 ---
 
-## 8. Portfolio / Recruiter Objective
+## 8. Documentation Objective
 
-This project is also designed to communicate engineering maturity.
+This project is designed to be clearly documented so that each step of learning is easy to understand and follow.
 
-A recruiter should be able to look at this repository and understand:
+The goal is to:
+- explain what is being built
+- explain why it is designed in a certain way
+- keep the structure clean and consistent
+- make it easy to revisit and improve later
 
-- I learn in a structured way
-- I can organize a technical project clearly
-- I do more than just write code
-- I can explain design decisions
-- I understand backend and database fundamentals
-- I can evolve a system from simple to more advanced stages
+Each phase will include both implementation and explanation to maintain clarity.
 
 The repository should show:
 - implementation
@@ -471,7 +468,22 @@ This stack is appropriate for learning backend engineering and system design in 
 
 ---
 
-## 16. Proposed Project Phases
+
+## 16. Project Documentation
+
+This project includes supporting documentation under the `docs/` folder.
+
+These documents are used to keep the project organized and to explain the system from different angles:
+
+- `docs/roadmap.md` — project phases and progress
+- `docs/requirements.md` — functional and non-functional requirements
+- `docs/design.md` — data model and design decisions
+- `docs/api-design.md` — planned API structure
+- `docs/scaling-notes.md` — future scaling considerations
+
+---
+
+## 17. Proposed Project Phases
 
 The project will be executed in the following order.
 
@@ -537,7 +549,7 @@ Document:
 
 ---
 
-## 17. Repository Structure Plan
+## 18. Repository Structure Plan
 
 The repository should remain clean and progressive.
 
@@ -566,8 +578,9 @@ database-projects/
     │   └── README.md
     │
     └── docs/
-        ├── design.md
         ├── roadmap.md
+        ├── requirements.md
+        ├── design.md
         ├── api-design.md
         └── scaling-notes.md
 
