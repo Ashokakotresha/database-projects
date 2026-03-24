@@ -421,3 +421,333 @@ For this project, the schema should be designed around the following principle:
 > keep source-of-truth tables normalized, preserve transaction history where correctness matters, define clear transaction boundaries, and add derived models only when repeated reads or reporting justify them.
 
 That leads to a clean beginner-friendly design that can also evolve in a professional way.
+
+================================================
+
+
+# Schema Selection Framework (Comprehensive Guide)
+
+A practical, system-design-oriented framework for choosing schema patterns based on real-world requirements.
+
+---
+
+# 1) One-Page Schema Cheat Sheet
+
+## Pick schema by problem, not database type
+
+| Problem | Default Schema Choice |
+|--------|----------------------|
+| Money, balances, inventory, permissions | Normalized |
+| Fast UI/API reads | Denormalized read model |
+| Audit trail, workflows, replay | Event schema |
+| Point-in-time truth | Temporal schema |
+| High-volume append/timeline data | Partitioned / Wide-column |
+| Complex read/write separation | CQRS |
+| Analytics/reporting | Star schema |
+| SaaS tenant isolation | Multi-tenant pattern |
+
+---
+
+## Quick Selection Rules
+
+### Use Normalized when:
+- Strong correctness required
+- Atomic updates needed
+- Cross-entity constraints exist
+
+### Use Denormalized when:
+- Read-heavy workload
+- Stable query shapes
+- Low latency required
+
+### Use Event Schema when:
+- Audit/history required
+- Async workflows exist
+- Multiple consumers depend on changes
+
+### Use Temporal when:
+- State changes over time matter
+- Compliance or historical queries required
+
+### Use Partitioned/Wide-column when:
+- Very high write throughput
+- Time-series or timeline queries dominate
+
+### Use CQRS when:
+- Read and write workloads differ significantly
+- Many specialized read views needed
+
+### Use Star Schema when:
+- Analytical queries dominate
+- Aggregation across dimensions required
+
+---
+
+## Safe Default Architecture
+
+- Normalized source of truth
+- Event stream for changes
+- Denormalized read models
+- Star-schema analytics layer
+
+---
+
+## Optimization Priority
+
+1. Correctness
+2. Access pattern fit
+3. Operability
+4. Latency
+5. Storage efficiency
+
+---
+
+## Common Mistakes
+
+- One schema for all workloads
+- Designing from database choice
+- Ignoring audit/history
+- Over-normalizing hot paths
+- Skipping versioning
+- Weak multi-tenancy design
+
+---
+
+# 2) Core Schema Selection Framework
+
+## Step 1: Business Invariants
+
+Ask:
+- What must never be wrong?
+- What must be unique?
+- What must be atomic?
+- What requires audit?
+
+### Implications
+
+| Need | Schema |
+|------|--------|
+| High correctness | Normalized |
+| Audit/history | Event / Temporal |
+| Long-lived contracts | Versioned |
+
+> Rule: Critical domains (money, identity, inventory) → strict schemas.
+
+---
+
+## Step 2: Access Patterns
+
+| Pattern | Schema |
+|--------|--------|
+| Fetch by ID | Aggregate-oriented |
+| Search/filter | Normalized / Read model |
+| Aggregation | Star/Snowflake |
+| Timeline/log | Partitioned |
+| Async workflows | Event |
+
+> Rule: Optimize for top queries.
+
+---
+
+## Step 3: Read vs Write
+
+| Workload | Schema |
+|----------|--------|
+| Write-heavy | Normalized |
+| Read-heavy | Denormalized |
+| Mixed | CQRS |
+
+---
+
+## Step 4: Consistency
+
+| Requirement | Schema |
+|------------|--------|
+| Strong cross-entity consistency | Normalized |
+| Object-level consistency | Aggregate |
+| Eventual consistency acceptable | CQRS / Event |
+
+> Rule: Use strong consistency sparingly.
+
+---
+
+## Step 5: Time Modeling
+
+| Need | Schema |
+|------|--------|
+| Full history | Event |
+| Valid-time state | Temporal |
+| Both | Combine |
+
+---
+
+## Step 6: Evolution
+
+Use:
+- Schema versioning
+- Backward compatibility
+- Migration strategies
+
+> Rule: Change is inevitable—design for it.
+
+---
+
+## Step 7: Domain Mapping
+
+| Characteristic | Schema |
+|---------------|--------|
+| Correctness | Normalized |
+| Read performance | Denormalized |
+| Audit | Event |
+| Time | Temporal |
+| Scale | Partitioned |
+| Complexity | CQRS |
+| Analytics | Star |
+| SaaS | Multi-tenant |
+
+---
+
+## Step 8: Scoring Framework
+
+Score domains (1–5):
+
+- Correctness criticality
+- Read intensity
+- Write intensity
+- Query flexibility
+- Audit/history need
+- Partitioning need
+- Eventual consistency tolerance
+
+### Interpretation
+
+- High correctness → Normalized
+- High reads → Denormalized
+- High audit → Event/Temporal
+- High scale → Partitioned
+- Mixed → CQRS
+
+---
+
+## Step 9: Default Architecture
+
+- Normalized source of truth
+- Event-driven updates
+- Denormalized projections
+- Analytics warehouse
+
+---
+
+## Step 10: Key Principle
+
+Do NOT ask:
+> “What is the best schema?”
+
+Ask:
+- What is the source of truth?
+- What are access patterns?
+- Where is strict correctness required?
+- Where is eventual consistency acceptable?
+- What history must be preserved?
+
+---
+
+# 3) Practical Decision Guide by System Type
+
+## Payments / Ledger Systems
+
+### Requirements
+- Strong correctness
+- No double-spend
+- Full audit trail
+- Idempotency
+
+### Schema Strategy
+- Normalized core (accounts, ledger)
+- Event schema (payment lifecycle)
+- Denormalized read views
+
+---
+
+## E-commerce Systems
+
+### Requirements
+- High read traffic (catalog)
+- Correct checkout
+- Inventory accuracy
+- Analytics
+
+### Schema Strategy
+- Normalized (orders, payments, inventory)
+- Denormalized (catalog, UI views)
+- Event schema (order lifecycle)
+- Star schema (analytics)
+
+---
+
+## Chat / Messaging Systems
+
+### Requirements
+- High write throughput
+- Timeline retrieval
+- Real-time delivery
+
+### Schema Strategy
+- Aggregate-oriented (conversation)
+- Partitioned (messages by conversation/time)
+- Event schema (delivery/read events)
+
+---
+
+## Inventory / Warehouse Systems
+
+### Requirements
+- Exact stock accuracy
+- Reservation handling
+- Auditability
+
+### Schema Strategy
+- Normalized core
+- Movement/event log
+- Optional temporal tracking
+
+---
+
+## Ride-hailing Systems
+
+### Requirements
+- Real-time matching
+- Location tracking
+- Event lifecycle
+
+### Schema Strategy
+- Normalized (trips, users)
+- Event schema (trip lifecycle)
+- Partitioned (location updates)
+- Denormalized read models
+
+---
+
+## SaaS Platforms
+
+### Requirements
+- Tenant isolation
+- Scalability
+- Access control
+
+### Schema Strategy
+- Multi-tenant (shared or isolated)
+- Normalized core (users, roles, billing)
+- Denormalized dashboards
+
+---
+
+# Final Rule
+
+> Schema is not a database decision—it is a system design decision driven by:
+> - access patterns
+> - consistency requirements
+> - scale characteristics
+> - domain constraints
+
+
