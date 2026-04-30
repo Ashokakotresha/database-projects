@@ -1,26 +1,44 @@
-1. Start H2
+Running multiple users/Connections:
 
-  java -jar h2-*.jar
+1. Start H2 Server mode
 
+  java -jar h2-*.jar -tcp -web
+
+This gives you:
+TCP server → localhost:9092
+Web console → http://localhost:8082
 By default, this starts an H2 TCP server and opens the web console at http://localhost:8082.
 Default credentials in the browser console are usually:
 
   User Name: sa
   Password: (leave blank)
 
-2. Create a new database via terminal
+1.1 Use the SAME JDBC URL everywhere  This is the most important rule:
 
-- Open H2 Shell in terminal, This starts an interactive SQL shell.
+jdbc:h2:tcp://localhost:9092/~/test
 
-  java -cp h2-*.jar org.h2.tools.Shell
+Do not mix with:
+jdbc:h2:~/test   ❌ (embedded mode)
 
-3. You will be prompted for: 
-  
-  URL: jdbc:h2:~/test   ---> Creates/uses a database called 'test' in your Home ditrectory (~)
-  User: sa              ---> Username
-  Password:             ---> (Blank) default
+1.2 Create multiple “users” (connections)
+You can simulate multiple users in different ways:
 
-4. Run SQL commands in terminal: Once connected, you can create tables and insert data:
+Option A — Browser sessions
+Open 2 tabs (or incognito + normal)
+Go to http://localhost:8082
+Connect both using the TCP URL
+
+Option B — Console + CLI
+User 1 → Web console
+User 2 → Shell:
+java -cp h2-*.jar org.h2.tools.Shell
+
+1.3 Option C — App + console
+Your app (e.g., Spring Boot)
+Plus H2 console
+
+
+2. Run SQL commands in terminal: Once connected, you can create tables and insert data:
   Ctrl+D or type exit; to leave the shell.
 
   CREATE TABLE students (
@@ -34,7 +52,18 @@ Default credentials in the browser console are usually:
 
   SELECT * FROM students;
 
-5. Connecting from Java
+1.4 Verify they are truly separate sessions
+
+In User 1:
+SET AUTOCOMMIT OFF;
+UPDATE account SET balance = balance + 10 WHERE id = 1;
+
+In User 2:
+SELECT * FROM account WHERE id = 1;
+
+You should not see the change yet → confirms proper isolation.
+
+3. Connecting from Java
 
   import java.sql.*;
 
@@ -72,89 +101,77 @@ Key point: You cannot mix embedded mode and server mode on the same database fil
 Solution:  Always use the TCP URL when connecting through the server:
 
 1. Launch H2 server (tcp + web) → Terminal 1
-
 2. Open H2 shell with TCP URL → Terminal 2
-
 3. Open browser console with TCP URL
-
 4. Connect Java program with same TCP URL
 
 ------------------------------------------------------------------------------------
-  --> By default connect in Embedded mode, i.e, it opens database file in exclusive mode. 
-      This blocks other connections including browser console. 
-  --> Insttead use SERVER mode to allow all clinet to connect via TCP URL.
 
+In H2 Database, the JDBC URL encodes both:
+Access mode (embedded vs TCP)
+Database identity (which DB instance/file)
+
+If either differs → you are not sharing the same database session.
 ------------------------------------------------
 
-## 1. Start H2 Server (TCP + Web Console)
+# H2 JDBC URL – Multi-User Connection Summary
 
-Open a terminal and run:
+## 1. Start H2 in Server Mode
+Run H2 as a shared database server:
 
 ```bash
-java -cp ~/path/to/h2-*.jar org.h2.tools.Server -tcp -tcpAllowOthers -web -webAllowOthers
-
+java -jar h2-*.jar -tcp -web
+TCP Server: localhost:9092
+Web Console: http://localhost:8082
 ```
+## 2. Use the SAME JDBC URL Everywhere
+All clients must use:
+jdbc:h2:tcp://localhost:9092/~/sync-test
 
--tcp → allows TCP connections
--tcpAllowOthers → optional, allows other machines to connect
--web → launches browser console
--webAllowOthers → optional, allows remote browser access
+❌ Do NOT use:
+jdbc:h2:~/sync-test
 
-Server output should show:
+## 3. Understand the JDBC URL Structure
+jdbc:h2:<MODE>://<HOST>/<DATABASE>
+Part	Meaning
+MODE	tcp, mem, or embedded
+HOST	Server location
+DATABASE	Database name/path
 
-  TCP server running at tcp://localhost:9092
-  Web console running at http://localhost:8082
+## 4. Ensure All Clients Match Exactly
 
+For shared access, these must be identical:
 
-2. Open H2 Shell via TCP
-   Open another terminal and run:
+Mode (tcp)
+Host (localhost:9092)
+Database path (~/sync-test)
 
-   java -cp ~/path/to/h2-*.jar org.h2.tools.Shell
+## 5. Create Multiple Connections (Users)
 
-Enter the following at prompts:
+You can simulate multiple users via:
+Web Console (multiple browser sessions)
 
-  URL: jdbc:h2:tcp://localhost/~/<database-name>
-  Driver: org.h2.Driver
-  User: sa
-  Password:
+CLI Shell:
+java -cp h2-*.jar org.h2.tools.Shell
+Application (e.g., Spring Boot)
 
-Now you can run SQL commands in the terminal:
+## 6. Verify Separate Sessions
+In User 1:
+SET AUTOCOMMIT OFF;
+UPDATE account SET balance = balance + 10 WHERE id = 1;
 
+In User 2:
+SELECT * FROM account WHERE id = 1;
 
-3. Open Browser Console via TCP
+✔ If changes are not visible → sessions are independent
 
-  Go to http://localhost:8082
-  Connect using:
-  
-  JDBC URL: jdbc:h2:tcp://localhost/~/h2-db-learning
-  User: sa
-  Password: 
+## 7. Common Mistakes to Avoid
+Mixing embedded + TCP URLs
+Using different DB paths (~/test vs ./test)
+Using in-memory DB unintentionally
+Leaving AUTOCOMMIT ON
+Testing in only one session
 
-Browser can now run queries simultaneously with the terminal shell.
-
-4. Connect Java Program via TCP
-   Example Java connection:
- 
-import java.sql.*;
-
-public class H2Example {
-    public static void main(String[] args) throws Exception {
-        Connection conn = DriverManager.getConnection(
-            "jdbc:h2:tcp://localhost/~/h2-db-learning", "sa", ""
-        );
-        Statement stmt = conn.createStatement();
-        stmt.execute("CREATE TABLE IF NOT EXISTS test(id INT PRIMARY KEY, name VARCHAR(100));");
-        stmt.execute("INSERT INTO test VALUES(1, 'Ashoka');");
-        ResultSet rs = stmt.executeQuery("SELECT * FROM test;");
-        while(rs.next()){
-            System.out.println(rs.getInt(1) + " " + rs.getString(2));
-        }
-        conn.close();
-    }
-}
-
-- Use the same TCP URL (jdbc:h2:tcp://localhost/~/h2-db-learning)
-
-- Multiple clients (browser + terminal + Java) can connect simultaneously.
-
-===============================================================================
+## 8. Key Rule
+The JDBC URL defines whether connections share the same database.
+If the URL differs → you are NOT testing real multi-user behavior in H2 Database.
